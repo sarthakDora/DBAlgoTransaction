@@ -1,0 +1,125 @@
+CREATE or alter PROCEDURE ProcessBuySellTransactions
+AS
+BEGIN
+    -- Create a temporary table to store the buy transactions
+    CREATE TABLE #TempBuyTransactions (
+        RowID INT IDENTITY(1,1),
+        Account_ID INT,
+        Security_ID INT,
+        Transaction_ID INT,
+        Trade_Date DATE,
+        Units INT,
+        Price DECIMAL(18, 2),
+        RemainingUnits INT
+    );
+
+    -- Populate the temporary table with buy transactions
+    INSERT INTO #TempBuyTransactions (Account_ID, Security_ID, Transaction_ID, Trade_Date, Units, Price, RemainingUnits)
+    SELECT
+        Account_ID,
+        Security_ID,
+        Transaction_ID,
+        Trade_Date,
+        Units,
+        Price,
+        Units
+    FROM Buy_Transaction_Table
+    ORDER BY Trade_Date, Transaction_ID;
+
+    -- Create a temporary table to store the sell transactions
+    CREATE TABLE #TempSellTransactions (
+        RowID INT IDENTITY(1,1),
+        Account_ID INT,
+        Security_ID INT,
+        Transaction_ID INT,
+        Trade_Date DATE,
+        Units INT,
+        Price DECIMAL(18, 2)
+    );
+
+    -- Populate the temporary table with sell transactions
+    INSERT INTO #TempSellTransactions (Account_ID, Security_ID, Transaction_ID, Trade_Date, Units, Price)
+    SELECT
+        Account_ID,
+        Security_ID,
+        Transaction_ID,
+        Trade_Date,
+        Units,
+        Price
+    FROM Sell_Transaction_Table
+    ORDER BY Trade_Date, Transaction_ID;
+
+    -- Create a table to store the final output
+    CREATE TABLE Final_Output_Table (
+        Account_ID INT,
+        Security_ID INT,
+        Sell_Trade_Date DATE,
+        Sell_Units INT,
+        Sell_Price DECIMAL(18, 2),
+        Buy_Price DECIMAL(18, 2),
+        Buy_Transaction_ID INT
+    );
+
+    -- Initialize variables
+    DECLARE @SellUnits INT, @BuyUnits INT, @BuyPrice DECIMAL(18, 2), @TransactionID INT;
+
+    -- Loop through sell transactions
+    DECLARE @SellRowCount INT = (SELECT COUNT(*) FROM #TempSellTransactions);
+    DECLARE @SellIndex INT = 1;
+
+    WHILE @SellIndex <= @SellRowCount
+    BEGIN
+        -- Get the current sell transaction details
+        SELECT @SellUnits = Units, @TransactionID = Transaction_ID
+        FROM #TempSellTransactions
+        WHERE RowID = @SellIndex;
+
+        -- Loop through buy transactions
+        DECLARE @BuyRowCount INT = (SELECT COUNT(*) FROM #TempBuyTransactions);
+        DECLARE @BuyIndex INT = 1;
+
+        WHILE @SellUnits > 0 AND @BuyIndex <= @BuyRowCount
+        BEGIN
+            -- Get the current buy transaction details
+            SELECT @BuyUnits = RemainingUnits, @BuyPrice = Price
+            FROM #TempBuyTransactions
+            WHERE RowID = @BuyIndex;
+
+            -- Calculate the units to sell from the current buy transaction
+            DECLARE @UnitsToSell INT = CASE
+                                            WHEN @SellUnits >= @BuyUnits THEN @BuyUnits
+                                            ELSE @SellUnits
+                                        END;
+
+            -- Update the remaining units in the buy transaction
+            UPDATE #TempBuyTransactions
+            SET RemainingUnits = RemainingUnits - @UnitsToSell
+            WHERE RowID = @BuyIndex;
+
+            -- Insert the transaction into the final output table
+            INSERT INTO Final_Output_Table (Account_ID, Security_ID, Sell_Trade_Date, Sell_Units, Sell_Price, Buy_Price, Buy_Transaction_ID)
+            VALUES (
+                (SELECT Account_ID FROM #TempSellTransactions WHERE RowID = @SellIndex),
+                (SELECT Security_ID FROM #TempSellTransactions WHERE RowID = @SellIndex),
+                (SELECT Trade_Date FROM #TempSellTransactions WHERE RowID = @SellIndex),
+                @UnitsToSell,
+                (SELECT Price FROM #TempSellTransactions WHERE RowID = @SellIndex),
+                @BuyPrice,
+                @TransactionID
+            );
+
+            -- Update the remaining sell units
+            SET @SellUnits = @SellUnits - @UnitsToSell;
+
+            -- Move to the next buy transaction
+            SET @BuyIndex = @BuyIndex + 1;
+        END
+
+        -- Move to the next sell transaction
+        SET @SellIndex = @SellIndex + 1;
+    END
+
+    -- Drop temporary tables
+    DROP TABLE #TempBuyTransactions;
+    DROP TABLE #TempSellTransactions;
+END
