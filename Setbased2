@@ -1,0 +1,82 @@
+CREATE OR ALTER PROCEDURE MatchTransactions
+AS
+BEGIN
+    SET XACT_ABORT ON;
+    BEGIN TRANSACTION;
+
+    -- Create temporary tables to store buy and sell transaction data
+    CREATE TABLE #BuyUnits (
+        Transaction_ID INT,
+        Account_ID INT,
+        Security_ID INT,
+        Units INT,
+        Price DECIMAL(10, 2),
+        Trade_Date DATE
+    );
+
+    CREATE TABLE #SellUnits (
+        Transaction_ID INT,
+        Account_ID INT,
+        Security_ID INT,
+        Units INT,
+        Price DECIMAL(10, 2),
+        Trade_Date DATE
+    );
+
+    -- Populate the temporary tables
+    INSERT INTO #BuyUnits (Transaction_ID, Account_ID, Security_ID, Units, Price, Trade_Date)
+    SELECT Transaction_ID, Account_ID, Security_ID, Units, Price, Trade_Date
+    FROM Buy_Transaction_Table
+    ORDER BY Trade_Date, Transaction_ID;
+
+    INSERT INTO #SellUnits (Transaction_ID, Account_ID, Security_ID, Units, Price, Trade_Date)
+    SELECT Transaction_ID, Account_ID, Security_ID, Units, Units, Price, Trade_Date
+    FROM Sell_Transaction_Table
+    ORDER BY Trade_Date, Transaction_ID;
+
+    -- Check for each account_id and security_id combination if total sell is covered by total buy
+    WITH TotalBuys AS (
+        SELECT Account_ID, Security_ID, SUM(Units) AS TotalBuyUnits
+        FROM #BuyUnits
+        GROUP BY Account_ID, Security_ID
+    ),
+    TotalSells AS (
+        SELECT Account_ID, Security_ID, SUM(Units) AS TotalSellUnits
+        FROM #SellUnits
+        GROUP BY Account_ID, Security_ID
+    )
+    DELETE FROM #SellUnits
+    WHERE EXISTS (
+        SELECT s.Account_ID, s.Security_ID
+        FROM TotalSells s
+        LEFT JOIN TotalBuys b ON s.Account_ID = b.Account_ID AND s.Security_ID = b.Security_ID
+        WHERE #SellUnits.Account_ID = s.Account_ID AND #SellUnits.Security_ID = s.Security_ID
+        AND (b.TotalBuyUnits IS NULL OR s.TotalSellUnits > b.TotalBuyUnits)
+    );
+
+    -- Process matching for remaining sell units
+    WHILE EXISTS (SELECT 1 FROM #SellUnits WHERE Units > 0)
+    BEGIN
+        -- Example processing logic; adjust as needed for actual matching
+        UPDATE s SET s.Units = 0
+        FROM #SellUnits s
+        WHERE s.Units > 0
+        AND EXISTS (
+            SELECT 1 FROM #BuyUnits b
+            WHERE b.Account_ID = s.Account_ID AND b.Security_ID = s.Security_ID AND b.Units >= s.Units
+        );
+
+        -- Insert into final output table
+        INSERT INTO Final_Output_Table (Account_ID, Security_ID, Sell_Trade_Date, Sell_Units, Sell_Price, Buy_Price, Buy_Transaction_ID)
+        SELECT s.Account_ID, s.Security_ID, GETDATE(), s.Units, s.Price, b.Price, b.Transaction_ID
+        FROM #SellUnits s
+        JOIN #BuyUnits b ON s.Account_ID = b.Account_ID AND s.Security_ID = b.Security_ID AND b.Units >= s.Units;
+    END;
+
+    -- Clean up
+    DROP TABLE #BuyUnits;
+    DROP TABLE #SellUnits;
+
+    COMMIT TRANSACTION;
+END;
+GO
