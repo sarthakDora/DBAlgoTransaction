@@ -1,0 +1,77 @@
+CREATE OR ALTER PROCEDURE MatchTransactions
+AS
+BEGIN
+    SET XACT_ABORT ON;
+    BEGIN TRANSACTION;
+
+    -- Create temporary tables to store buy and sell transaction data
+    CREATE TABLE #BuyUnits (
+        Transaction_ID INT,
+        Account_ID INT,
+        Security_ID INT,
+        Units INT,
+        Price DECIMAL(10, 2),
+        Trade_Date DATE
+    );
+
+    CREATE TABLE #SellUnits (
+        Transaction_ID INT,
+        Account_ID INT,
+        Security_ID INT,
+        Units INT,
+        Price DECIMAL(10, 2),
+        Trade_Date DATE
+    );
+
+    -- Populate the temporary tables
+    INSERT INTO #BuyUnits (Transaction_ID, Account_ID, Security_ID, Units, Price, Trade_Date)
+    SELECT Transaction_ID, Account_ID, Security_ID, Units, Price, Trade_Date
+    FROM Buy_Transaction_Table
+    ORDER BY Trade_Date, Transaction_ID;
+
+    INSERT INTO #SellUnits (Transaction_ID, Account_ID, Security_ID, Units, Price, Trade_Date)
+    SELECT Transaction_ID, Account_ID, Security_ID, Units, Price, Trade_Date
+    FROM Sell_Transaction_Table
+    ORDER BY Trade_Date, Transaction_ID;
+
+    -- Check each account_id and security_id combination to see if total sell units can be covered by buy units
+    DECLARE @AccountID INT, @SecurityID INT, @TotalBuyUnits INT, @TotalSellUnits INT;
+
+    -- Temporary table to store eligible account_id and security_id combinations
+    CREATE TABLE #EligibleTransactions (
+        Account_ID INT,
+        Security_ID INT
+    );
+
+    -- Find all eligible combinations where buy units cover sell units
+    INSERT INTO #EligibleTransactions (Account_ID, Security_ID)
+    SELECT b.Account_ID, b.Security_ID
+    FROM #BuyUnits b
+    JOIN #SellUnits s ON b.Account_ID = s.Account_ID AND b.Security_ID = s.Security_ID
+    GROUP BY b.Account_ID, b.Security_ID
+    HAVING SUM(b.Units) >= SUM(s.Units);
+
+    -- Process eligible transactions
+    WHILE EXISTS (SELECT 1 FROM #EligibleTransactions)
+    BEGIN
+        SELECT TOP 1 @AccountID = Account_ID, @SecurityID = Security_ID FROM #EligibleTransactions;
+
+        -- Insert matched transactions into Final_Output_Table
+        INSERT INTO Final_Output_Table (Account_ID, Security_ID, Sell_Trade_Date, Sell_Units, Sell_Price, Buy_Price, Buy_Transaction_ID)
+        SELECT s.Account_ID, s.Security_ID, GETDATE(), s.Units, s.Price, b.Price, b.Transaction_ID
+        FROM #SellUnits s
+        JOIN #BuyUnits b ON s.Account_ID = b.Account_ID AND s.Security_ID = b.Security_ID
+        WHERE s.Account_ID = @AccountID AND s.Security_ID = @SecurityID;
+
+        -- Delete processed combination
+        DELETE FROM #EligibleTransactions WHERE Account_ID = @AccountID AND Security_ID = @SecurityID;
+    END;
+
+    -- Clean up
+    DROP TABLE #BuyUnits;
+    DROP TABLE #SellUnits;
+    DROP TABLE #EligibleTransactions;
+
+    COMMIT TRANSACTION;
+END;
+GO
