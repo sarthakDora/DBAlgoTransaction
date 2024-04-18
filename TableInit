@@ -1,0 +1,45 @@
+CREATE TABLE Buy_Transaction_Table (
+    Transaction_ID INT,
+    Account_ID INT,
+    Security_ID INT,
+    Trade_Date DATE,
+    Units INT,
+    Price DECIMAL(18, 2)
+);
+
+-- Create Sell_Transaction_Table
+CREATE TABLE Sell_Transaction_Table (
+    Transaction_ID INT,
+    Account_ID INT,
+    Security_ID INT,
+    Trade_Date DATE,
+    Units INT,
+    Price DECIMAL(18, 2)
+);
+
+CREATE TABLE Final_Output_Table (
+    Account_ID INT,
+    Security_ID INT,
+    Sell_Trade_Date DATE,
+    Sell_Units INT,
+    Sell_Price DECIMAL(18, 2),
+    Buy_Price DECIMAL(18, 2),
+    Buy_Transaction_ID INT
+);
+
+truncate table Buy_Transaction_Table
+-- Insert data into Buy_Transaction_Table
+INSERT INTO Buy_Transaction_Table (Transaction_ID, Account_ID, Security_ID, Trade_Date, Units, Price)
+VALUES
+    (1, 3336, 1234, '2023-02-28', 100, 10.5),
+    (2, 3336, 1234, '2023-03-01', 50, 10.8),
+    (3, 3336, 1234, '2023-04-01', 100, 10.7),
+	(6, 3336, 1235, '2023-04-01', 300, 11.7);
+
+	truncate table Sell_Transaction_Table
+-- Insert data into Sell_Transaction_Table
+INSERT INTO Sell_Transaction_Table (Transaction_ID, Account_ID, Security_ID, Trade_Date, Units, Price)
+VALUES
+    (4, 3336, 1234, '2024-04-01', 100, 10.7),
+    (5, 3336, 1234, '2024-04-02', 200, 10.6),
+	  (7, 3336, 1235, '2024-04-02', 200, 3.5);
