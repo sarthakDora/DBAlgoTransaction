@@ -1,4 +1,4 @@
-CREATE or alter  PROCEDURE MatchTransactions
+CREATE OR ALTER PROCEDURE MatchTransactions
 AS
 BEGIN
     SET XACT_ABORT ON;
@@ -9,13 +9,14 @@ BEGIN
         Transaction_ID INT,
         Account_ID INT,
         Security_ID INT,
+        Trade_Date DATE,
         Units INT,
         Price DECIMAL(10, 2)
     );
 
     -- Populate temporary table with current buy data
-    INSERT INTO #BuyUnits (Transaction_ID, Account_ID, Security_ID, Units, Price)
-    SELECT Transaction_ID, Account_ID, Security_ID, Units, Price
+    INSERT INTO #BuyUnits (Transaction_ID, Account_ID, Security_ID, Trade_Date, Units, Price)
+    SELECT Transaction_ID, Account_ID, Security_ID, Trade_Date, Units, Price
     FROM Buy_Transaction_Table;
 
     -- Cursor to check each combination of account_id and security_id from sell transactions
@@ -44,7 +45,7 @@ BEGIN
             SELECT Transaction_ID, Units, Price
             FROM Sell_Transaction_Table
             WHERE Account_ID = @AccountID AND Security_ID = @SecurityID
-            ORDER BY Trade_Date;
+            ORDER BY Trade_Date, Transaction_ID;  -- Updated ORDER BY clause
 
             OPEN sell_cursor;
             DECLARE @SellTransactionID INT, @SellUnits INT, @SellPrice DECIMAL(10,2);
@@ -59,10 +60,11 @@ BEGIN
                 BEGIN
                     DECLARE @BuyTransactionID INT, @BuyUnitsAvailable INT, @BuyPrice DECIMAL(10,2);
 
+                    -- Order by Trade_Date and Transaction_ID for buy transactions
                     SELECT TOP 1 @BuyTransactionID = Transaction_ID, @BuyUnitsAvailable = Units, @BuyPrice = Price
                     FROM #BuyUnits
                     WHERE Account_ID = @AccountID AND Security_ID = @SecurityID AND Units > 0
-                    ORDER BY Transaction_ID;
+                    ORDER BY Trade_Date, Transaction_ID;  -- Updated ORDER BY clause
 
                     DECLARE @UnitsToTransfer INT = CASE
                         WHEN @RemainingSellUnits <= @BuyUnitsAvailable THEN @RemainingSellUnits
