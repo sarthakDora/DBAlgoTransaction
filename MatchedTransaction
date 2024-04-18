@@ -1,4 +1,4 @@
-CREATE or alter PROCEDURE MatchTransactions
+CREATE or alter  PROCEDURE MatchTransactions
 AS
 BEGIN
     SET XACT_ABORT ON;
@@ -18,72 +18,79 @@ BEGIN
     SELECT Transaction_ID, Account_ID, Security_ID, Units, Price
     FROM Buy_Transaction_Table;
 
-    -- Process each sell transaction only if total available buy units are sufficient
-    DECLARE @AccountID INT, @SecurityID INT, @SellTransactionID INT, @SellUnits INT, @SellPrice DECIMAL(10,2);
+    -- Cursor to check each combination of account_id and security_id from sell transactions
+    DECLARE @AccountID INT, @SecurityID INT, @TotalSellUnits INT, @TotalBuyUnits INT;
 
-    -- Cursor to iterate over sell transactions
-    DECLARE sell_cursor CURSOR FOR
-    SELECT Transaction_ID, Account_ID, Security_ID, Units, Price
-    FROM Sell_Transaction_Table
-    ORDER BY Account_ID, Security_ID, Trade_Date;
+    DECLARE check_cursor CURSOR FOR
+    SELECT st.Account_ID, st.Security_ID, SUM(st.Units) AS TotalSellUnits
+    FROM Sell_Transaction_Table st
+    GROUP BY st.Account_ID, st.Security_ID;
 
-    OPEN sell_cursor;
-
-    FETCH NEXT FROM sell_cursor INTO @SellTransactionID, @AccountID, @SecurityID, @SellUnits, @SellPrice;
+    OPEN check_cursor;
+    FETCH NEXT FROM check_cursor INTO @AccountID, @SecurityID, @TotalSellUnits;
 
     WHILE @@FETCH_STATUS = 0
     BEGIN
-        -- Check if there are enough buy units to cover the sell units for this account and security
-        DECLARE @TotalBuyUnits INT;
-        SELECT @TotalBuyUnits = SUM(Units)
+        -- Calculate total available buy units for the combination
+        SELECT @TotalBuyUnits = ISNULL(SUM(Units), 0)
         FROM #BuyUnits
         WHERE Account_ID = @AccountID AND Security_ID = @SecurityID;
 
-        IF @TotalBuyUnits >= @SellUnits
+        -- Proceed only if there are enough buy units to cover all sell units
+        IF @TotalBuyUnits >= @TotalSellUnits
         BEGIN
-            -- Process the sell units
-            DECLARE @RemainingSellUnits INT = @SellUnits;
+            -- Process each sell transaction only if the total buy units meet or exceed the sell requirements
+            DECLARE sell_cursor CURSOR FOR
+            SELECT Transaction_ID, Units, Price
+            FROM Sell_Transaction_Table
+            WHERE Account_ID = @AccountID AND Security_ID = @SecurityID
+            ORDER BY Trade_Date;
 
-            WHILE @RemainingSellUnits > 0
+            OPEN sell_cursor;
+            DECLARE @SellTransactionID INT, @SellUnits INT, @SellPrice DECIMAL(10,2);
+
+            FETCH NEXT FROM sell_cursor INTO @SellTransactionID, @SellUnits, @SellPrice;
+
+            WHILE @@FETCH_STATUS = 0
             BEGIN
-                DECLARE @BuyTransactionID INT, @BuyUnitsAvailable INT, @BuyPrice DECIMAL(10,2);
+                DECLARE @RemainingSellUnits INT = @SellUnits;
 
-                SELECT TOP 1 @BuyTransactionID = Transaction_ID, @BuyUnitsAvailable = Units, @BuyPrice = Price
-                FROM #BuyUnits
-                WHERE Account_ID = @AccountID AND Security_ID = @SecurityID AND Units > 0
-                ORDER BY Transaction_ID;
-
-                IF @BuyTransactionID IS NOT NULL
+                WHILE @RemainingSellUnits > 0
                 BEGIN
+                    DECLARE @BuyTransactionID INT, @BuyUnitsAvailable INT, @BuyPrice DECIMAL(10,2);
+
+                    SELECT TOP 1 @BuyTransactionID = Transaction_ID, @BuyUnitsAvailable = Units, @BuyPrice = Price
+                    FROM #BuyUnits
+                    WHERE Account_ID = @AccountID AND Security_ID = @SecurityID AND Units > 0
+                    ORDER BY Transaction_ID;
+
                     DECLARE @UnitsToTransfer INT = CASE
                         WHEN @RemainingSellUnits <= @BuyUnitsAvailable THEN @RemainingSellUnits
                         ELSE @BuyUnitsAvailable
                     END;
 
-                    -- Update buy units
                     UPDATE #BuyUnits
                     SET Units = Units - @UnitsToTransfer
                     WHERE Transaction_ID = @BuyTransactionID;
 
-                    -- Insert into final output
                     INSERT INTO Final_Output_Table (Account_ID, Security_ID, Sell_Trade_Date, Sell_Units, Sell_Price, Buy_Price, Buy_Transaction_ID)
                     VALUES (@AccountID, @SecurityID, CURRENT_TIMESTAMP, @UnitsToTransfer, @SellPrice, @BuyPrice, @BuyTransactionID);
 
                     SET @RemainingSellUnits -= @UnitsToTransfer;
                 END
-                ELSE
-                BEGIN
-                    BREAK; -- Exit if no more buy transactions are available
-                END
+
+                FETCH NEXT FROM sell_cursor INTO @SellTransactionID, @SellUnits, @SellPrice;
             END
+
+            CLOSE sell_cursor;
+            DEALLOCATE sell_cursor;
         END
 
-        -- Fetch the next sell transaction
-        FETCH NEXT FROM sell_cursor INTO @SellTransactionID, @AccountID, @SecurityID, @SellUnits, @SellPrice;
+        FETCH NEXT FROM check_cursor INTO @AccountID, @SecurityID, @TotalSellUnits;
     END
 
-    CLOSE sell_cursor;
-    DEALLOCATE sell_cursor;
+    CLOSE check_cursor;
+    DEALLOCATE check_cursor;
 
     COMMIT TRANSACTION;
 END
