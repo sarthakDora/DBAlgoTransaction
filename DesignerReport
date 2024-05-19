@@ -1,0 +1,650 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Report xmlns="http://schemas.microsoft.com/sqlserver/reporting/2016/01/reportdefinition" xmlns:rd="http://schemas.microsoft.com/SQLServer/reporting/reportdesigner">
+  <Body>
+    <ReportItems>
+      <Textbox Name="ReportTitle">
+        <CanGrow>true</CanGrow>
+        <KeepTogether>true</KeepTogether>
+        <Paragraphs>
+          <Paragraph>
+            <TextRuns>
+              <TextRun>
+                <Value>Virtus GF Select High Yield Fund</Value>
+                <Style>
+                  <FontSize>16pt</FontSize>
+                  <FontWeight>Bold</FontWeight>
+                </Style>
+              </TextRun>
+            </TextRuns>
+            <Style />
+          </Paragraph>
+        </Paragraphs>
+        <Style>
+          <PaddingLeft>2pt</PaddingLeft>
+          <PaddingRight>2pt</PaddingRight>
+          <PaddingTop>2pt</PaddingTop>
+          <PaddingBottom>2pt</PaddingBottom>
+        </Style>
+        <Top>0.2in</Top>
+        <Left>0.2in</Left>
+        <Height>0.3in</Height>
+        <Width>6in</Width>
+      </Textbox>
+
+      <!-- FUND INFORMATION -->
+      <Textbox Name="FundInformationTitle">
+        <Value>FUND INFORMATION</Value>
+        <Style>
+          <FontSize>14pt</FontSize>
+          <FontWeight>Bold</FontWeight>
+        </Style>
+        <Top>0.8in</Top>
+        <Left>0.2in</Left>
+      </Textbox>
+
+      <Textbox Name="InceptionDateLabel">
+        <Value>Inception Date:</Value>
+        <Top>1.2in</Top>
+        <Left>0.2in</Left>
+        <Style>
+          <FontSize>10pt</FontSize>
+        </Style>
+      </Textbox>
+      <Textbox Name="InceptionDateValue">
+        <Value>12/06/18</Value>
+        <Top>1.2in</Top>
+        <Left>1.5in</Left>
+        <Style>
+          <FontSize>10pt</FontSize>
+        </Style>
+      </Textbox>
+
+      <Textbox Name="DomicileLabel">
+        <Value>Domicile:</Value>
+        <Top>1.4in</Top>
+        <Left>0.2in</Left>
+        <Style>
+          <FontSize>10pt</FontSize>
+        </Style>
+      </Textbox>
+      <Textbox Name="DomicileValue">
+        <Value>Ireland</Value>
+        <Top>1.4in</Top>
+        <Left>1.5in</Left>
+        <Style>
+          <FontSize>10pt</FontSize>
+        </Style>
+      </Textbox>
+
+      <Textbox Name="UCITSLabel">
+        <Value>UCITS IV:</Value>
+        <Top>1.6in</Top>
+        <Left>0.2in</Left>
+        <Style>
+          <FontSize>10pt</FontSize>
+        </Style>
+      </Textbox>
+      <Textbox Name="UCITSValue">
+        <Value>Yes</Value>
+        <Top>1.6in</Top>
+        <Left>1.5in</Left>
+        <Style>
+          <FontSize>10pt</FontSize>
+        </Style>
+      </Textbox>
+
+      <Textbox Name="ValuationLabel">
+        <Value>Valuation:</Value>
+        <Top>1.8in</Top>
+        <Left>0.2in</Left>
+        <Style>
+          <FontSize>10pt</FontSize>
+        </Style>
+      </Textbox>
+      <Textbox Name="ValuationValue">
+        <Value>Daily</Value>
+        <Top>1.8in</Top>
+        <Left>1.5in</Left>
+        <Style>
+          <FontSize>10pt</FontSize>
+        </Style>
+      </Textbox>
+
+      <Textbox Name="OngoingChargesLabel">
+        <Value>Ongoing Charges:</Value>
+        <Top>2.0in</Top>
+        <Left>0.2in</Left>
+        <Style>
+          <FontSize>10pt</FontSize>
+        </Style>
+      </Textbox>
+      <Textbox Name="OngoingChargesValue">
+        <Value>0.75%</Value>
+        <Top>2.0in</Top>
+        <Left>1.5in</Left>
+        <Style>
+          <FontSize>10pt</FontSize>
+        </Style>
+      </Textbox>
+
+      <Textbox Name="BaseCurrencyLabel">
+        <Value>Base Currency:</Value>
+        <Top>2.2in</Top>
+        <Left>0.2in</Left>
+        <Style>
+          <FontSize>10pt</FontSize>
+        </Style>
+      </Textbox>
+      <Textbox Name="BaseCurrencyValue">
+        <Value>USD</Value>
+        <Top>2.2in</Top>
+        <Left>1.5in</Left>
+        <Style>
+          <FontSize>10pt</FontSize>
+        </Style>
+      </Textbox>
+
+      <Textbox Name="ConveniencePricingLabel">
+        <Value>Convenience Pricing:</Value>
+        <Top>2.4in</Top>
+        <Left>0.2in</Left>
+        <Style>
+          <FontSize>10pt</FontSize>
+        </Style>
+      </Textbox>
+      <Textbox Name="ConveniencePricingValue">
+        <Value>EUR, GBP</Value>
+        <Top>2.4in</Top>
+        <Left>1.5in</Left>
+        <Style>
+          <FontSize>10pt</FontSize>
+        </Style>
+      </Textbox>
+
+      <Textbox Name="NetTotalAssetsLabel">
+        <Value>Net Total Assets (mm):</Value>
+        <Top>2.6in</Top>
+        <Left>0.2in</Left>
+        <Style>
+          <FontSize>10pt</FontSize>
+        </Style>
+      </Textbox>
+      <Textbox Name="NetTotalAssetsValue">
+        <Value>$25.99</Value>
+        <Top>2.6in</Top>
+        <Left>1.5in</Left>
+        <Style>
+          <FontSize>10pt</FontSize>
+        </Style>
+      </Textbox>
+
+      <Textbox Name="IndexLabel">
+        <Value>Index:</Value>
+        <Top>2.8in</Top>
+        <Left>0.2in</Left>
+        <Style>
+          <FontSize>10pt</FontSize>
+        </Style>
+      </Textbox>
+      <Textbox Name="IndexValue">
+        <Value>ICE BofA U.S. High Yield Cash Pay Index</Value>
+        <Top>2.8in</Top>
+        <Left>1.5in</Left>
+        <Style>
+          <FontSize>10pt</FontSize>
+        </Style>
+      </Textbox>
+
+      <!-- ANNUAL PERFORMANCE -->
+      <Textbox Name="AnnualPerformanceTitle">
+        <Value>ANNUAL PERFORMANCE (%)</Value>
+        <Top>3.5in</Top>
+        <Left>0.2in</Left>
+        <Style>
+          <FontSize>14pt</FontSize>
+          <FontWeight>Bold</FontWeight>
+        </Style>
+      </Textbox>
+
+      <Table Name="AnnualPerformanceTable">
+        <Top>4.0in</Top>
+        <Left>0.2in</Left>
+        <DataSetName>AnnualPerformanceDataSet</DataSetName>
+        <Style>
+          <Border>
+            <Color>Black</Color>
+            <Style>Solid</Style>
+            <Width>1pt</Width>
+          </Border>
+        </Style>
+        <Header>
+          <TableRows>
+            <TableRow>
+              <TableCells>
+                <TableCell>
+                  <ReportItems>
+                    <Textbox Name="YearColumnHeader">
+                      <Value>Year</Value>
+                      <Style>
+                        <FontWeight>Bold</FontWeight>
+                        <Border>
+                          <Color>Black</Color>
+                          <Style>Solid</Style>
+                          <Width>1pt</Width>
+                        </Border>
+                      </Style>
+                    </Textbox>
+                  </ReportItems>
+                </TableCell>
+                <TableCell>
+                  <ReportItems>
+                    <Textbox Name="ISharesAccColumnHeader">
+                      <Value>I Shares Acc.</Value>
+                      <Style>
+                        <FontWeight>Bold</FontWeight>
+                        <Border>
+                          <Color>Black</Color>
+                          <Style>Solid</Style>
+                          <Width>1pt</Width>
+                        </Border>
+                      </Style>
+                    </Textbox>
+                  </ReportItems>
+                </TableCell>
+                <TableCell>
+                  <ReportItems>
+                    <Textbox Name="ISharesDistColumnHeader">
+                      <Value>I Shares Dist.</Value>
+                      <Style>
+                        <FontWeight>Bold</FontWeight>
+                        <Border>
+                          <Color>Black</Color>
+                          <Style>Solid</Style>
+                          <Width>1pt</Width>
+                        </Border>
+                      </Style>
+                    </Textbox>
+                  </ReportItems>
+                </TableCell>
+                <TableCell>
+                  <ReportItems>
+                    <Textbox Name="IndexColumnHeader">
+                      <Value>Index</Value>
+                      <Style>
+                        <FontWeight>Bold</FontWeight>
+                        <Border>
+                          <Color>Black</Color>
+                          <Style>Solid</Style>
+                          <Width>1pt</Width>
+                        </Border>
+                      </Style>
+                    </Textbox>
+                  </ReportItems>
+                </TableCell>
+              </TableCells>
+            </TableRow>
+          </TableRows>
+        </Header>
+        <Details>
+          <TableRows>
+            <TableRow>
+              <TableCells>
+                <TableCell>
+                  <ReportItems>
+                    <Textbox Name="YearValue">
+                      <Value>2023</Value>
+                      <Style>
+                        <Border>
+                          <Color>Black</Color>
+                          <Style>Solid</Style>
+                          <Width>1pt</Width>
+                        </Border>
+                      </Style>
+                    </Textbox>
+                  </ReportItems>
+                </TableCell>
+                <TableCell>
+                  <ReportItems>
+                    <Textbox Name="ISharesAccValue">
+                      <Value>9.75</Value>
+                      <Style>
+                        <Border>
+                          <Color>Black</Color>
+                          <Style>Solid</Style>
+                          <Width>1pt</Width>
+                        </Border>
+                      </Style>
+                    </Textbox>
+                  </ReportItems>
+                </TableCell>
+                <TableCell>
+                  <ReportItems>
+                    <Textbox Name="ISharesDistValue">
+                      <Value>9.78</Value>
+                      <Style>
+                        <Border>
+                          <Color>Black</Color>
+                          <Style>Solid</Style>
+                          <Width>1pt</Width>
+                        </Border>
+                      </Style>
+                    </Textbox>
+                  </ReportItems>
+                </TableCell>
+                <TableCell>
+                  <ReportItems>
+                    <Textbox Name="IndexValue">
+                      <Value>13.40</Value>
+                      <Style>
+                        <Border>
+                          <Color>Black</Color>
+                          <Style>Solid</Style>
+                          <Width>1pt</Width>
+                        </Border>
+                      </Style>
+                    </Textbox>
+                  </ReportItems>
+                </TableCell>
+              </TableCells>
+            </TableRow>
+            <!-- Repeat TableRow elements for other years -->
+          </TableRows>
+        </Details>
+      </Table>
+
+      <!-- SECTOR ALLOCATIONS -->
+      <Textbox Name="SectorAllocationsTitle">
+        <Value>SECTOR ALLOCATIONS</Value>
+        <Top>5.5in</Top>
+        <Left>0.2in</Left>
+        <Style>
+          <FontSize>14pt</FontSize>
+          <FontWeight>Bold</FontWeight>
+        </Style>
+      </Textbox>
+
+      <Table Name="SectorAllocationsTable">
+        <Top>6.0in</Top>
+        <Left>0.2in</Left>
+        <DataSetName>SectorAllocationsDataSet</DataSetName>
+        <Style>
+          <Border>
+            <Color>Black</Color>
+            <Style>Solid</Style>
+            <Width>1pt</Width>
+          </Border>
+        </Style>
+        <Header>
+          <TableRows>
+            <TableRow>
+              <TableCells>
+                <TableCell>
+                  <ReportItems>
+                    <Textbox Name="SectorColumnHeader">
+                      <Value>Sector</Value>
+                      <Style>
+                        <FontWeight>Bold</FontWeight>
+                        <Border>
+                          <Color>Black</Color>
+                          <Style>Solid</Style>
+                          <Width>1pt</Width>
+                        </Border>
+                      </Style>
+                    </Textbox>
+                  </ReportItems>
+                </TableCell>
+                <TableCell>
+                  <ReportItems>
+                    <Textbox Name="PercentageColumnHeader">
+                      <Value>% Fund</Value>
+                      <Style>
+                        <FontWeight>Bold</FontWeight>
+                        <Border>
+                          <Color>Black</Color>
+                          <Style>Solid</Style>
+                          <Width>1pt</Width>
+                        </Border>
+                      </Style>
+                    </Textbox>
+                  </ReportItems>
+                </TableCell>
+              </TableCells>
+            </TableRow>
+          </TableRows>
+        </Header>
+        <Details>
+          <TableRows>
+            <TableRow>
+              <TableCells>
+                <TableCell>
+                  <ReportItems>
+                    <Textbox Name="SectorValue">
+                      <Value>Energy</Value>
+                      <Style>
+                        <Border>
+                          <Color>Black</Color>
+                          <Style>Solid</Style>
+                          <Width>1pt</Width>
+                        </Border>
+                      </Style>
+                    </Textbox>
+                  </ReportItems>
+                </TableCell>
+                <TableCell>
+                  <ReportItems>
+                    <Textbox Name="PercentageValue">
+                      <Value>12.86</Value>
+                      <Style>
+                        <Border>
+                          <Color>Black</Color>
+                          <Style>Solid</Style>
+                          <Width>1pt</Width>
+                        </Border>
+                      </Style>
+                    </Textbox>
+                  </ReportItems>
+                </TableCell>
+              </TableCells>
+            </TableRow>
+            <!-- Repeat TableRow elements for other sectors -->
+          </TableRows>
+        </Details>
+      </Table>
+
+      <!-- DISTRIBUTION YIELD -->
+      <Textbox Name="DistributionYieldTitle">
+        <Value>DISTRIBUTION YIELD</Value>
+        <Top>7.5in</Top>
+        <Left>0.2in</Left>
+        <Style>
+          <FontSize>14pt</FontSize>
+          <FontWeight>Bold</FontWeight>
+        </Style>
+      </Textbox>
+
+      <Table Name="DistributionYieldTable">
+        <Top>8.0in</Top>
+        <Left>0.2in</Left>
+        <DataSetName>DistributionYieldDataSet</DataSetName>
+        <Style>
+          <Border>
+            <Color>Black</Color>
+            <Style>Solid</Style>
+            <Width>1pt</Width>
+          </Border>
+        </Style>
+        <Header>
+          <TableRows>
+            <TableRow>
+              <TableCells>
+                <TableCell>
+                  <ReportItems>
+                    <Textbox Name="ClassColumnHeader">
+                      <Value>Class</Value>
+                      <Style>
+                        <FontWeight>Bold</FontWeight>
+                        <Border>
+                          <Color>Black</Color>
+                          <Style>Solid</Style>
+                          <Width>1pt</Width>
+                        </Border>
+                      </Style>
+                    </Textbox>
+                  </ReportItems>
+                </TableCell>
+                <TableCell>
+                  <ReportItems>
+                    <Textbox Name="YieldColumnHeader">
+                      <Value>Yield (%)</Value>
+                      <Style>
+                        <FontWeight>Bold</FontWeight>
+                        <Border>
+                          <Color>Black</Color>
+                          <Style>Solid</Style>
+                          <Width>1pt</Width>
+                        </Border>
+                      </Style>
+                    </Textbox>
+                  </ReportItems>
+                </TableCell>
+              </TableCells>
+            </TableRow>
+          </TableRows>
+        </Header>
+        <Details>
+          <TableRows>
+            <TableRow>
+              <TableCells>
+                <TableCell>
+                  <ReportItems>
+                    <Textbox Name="ClassValue">
+                      <Value>Class I Distributing</Value>
+                      <Style>
+                        <Border>
+                          <Color>Black</Color>
+                          <Style>Solid</Style>
+                          <Width>1pt</Width>
+                        </Border>
+                      </Style>
+                    </Textbox>
+                  </ReportItems>
+                </TableCell>
+                <TableCell>
+                  <ReportItems>
+                    <Textbox Name="YieldValue">
+                      <Value>5.20</Value>
+                      <Style>
+                        <Border>
+                          <Color>Black</Color>
+                          <Style>Solid</Style>
+                          <Width>1pt</Width>
+                        </Border>
+                      </Style>
+                    </Textbox>
+                  </ReportItems>
+                </TableCell>
+              </TableCells>
+            </TableRow>
+            <!-- Repeat TableRow elements for other classes -->
+          </TableRows>
+        </Details>
+      </Table>
+
+    </ReportItems>
+    <Height>10in</Height>
+  </Body>
+  <DataSources>
+    <DataSource Name="DataSource1">
+      <ConnectionProperties>
+        <DataProvider>SQL</DataProvider>
+        <ConnectString>Data Source=your_server;Initial Catalog=your_database</ConnectString>
+        <IntegratedSecurity>true</IntegratedSecurity>
+      </ConnectionProperties>
+    </DataSource>
+  </DataSources>
+  <DataSets>
+    <DataSet Name="AnnualPerformanceDataSet">
+      <Query>
+        <DataSourceName>DataSource1</DataSourceName>
+        <CommandText>SELECT * FROM AnnualPerformance</CommandText>
+      </Query>
+      <Fields>
+        <Field Name="Year">
+          <DataField>Year</DataField>
+        </Field>
+        <Field Name="ISharesAcc">
+          <DataField>ISharesAcc</DataField>
+        </Field>
+        <Field Name="ISharesDist">
+          <DataField>ISharesDist</DataField>
+        </Field>
+        <Field Name="Index">
+          <DataField>Index</DataField>
+        </Field>
+      </Fields>
+    </DataSet>
+    <DataSet Name="SectorAllocationsDataSet">
+      <Query>
+        <DataSourceName>DataSource1</DataSourceName>
+        <CommandText>SELECT * FROM SectorAllocations</CommandText>
+      </Query>
+      <Fields>
+        <Field Name="Sector">
+          <DataField>Sector</DataField>
+        </Field>
+        <Field Name="Percentage">
+          <DataField>Percentage</DataField>
+        </Field>
+      </Fields>
+    </DataSet>
+    <DataSet Name="DistributionYieldDataSet">
+      <Query>
+        <DataSourceName>DataSource1</DataSourceName>
+        <CommandText>SELECT * FROM DistributionYield</CommandText>
+      </Query>
+      <Fields>
+        <Field Name="Class">
+          <DataField>Class</DataField>
+        </Field>
+        <Field Name="Yield">
+          <DataField>Yield</DataField>
+        </Field>
+      </Fields>
+    </DataSet>
+  </DataSets>
+  <Page>
+    <PageHeader>
+      <Height>0.5in</Height>
+      <PrintOnFirstPage>true</PrintOnFirstPage>
+      <PrintOnLastPage>true</PrintOnLastPage>
+      <ReportItems>
+        <Textbox Name="HeaderTitle">
+          <Value>Virtus Global Funds</Value>
+          <Style>
+            <FontSize>12pt</FontSize>
+            <FontWeight>Bold</FontWeight>
+          </Style>
+        </Textbox>
+      </ReportItems>
+    </PageHeader>
+    <PageFooter>
+      <Height>0.5in</Height>
+      <PrintOnFirstPage>true</PrintOnFirstPage>
+      <PrintOnLastPage>true</PrintOnLastPage>
+      <ReportItems>
+        <Textbox Name="FooterText">
+          <Value>NOT FOR SALE IN THE U.S. OR TO U.S. PERSONS</Value>
+          <Style>
+            <FontSize>10pt</FontSize>
+          </Style>
+        </Textbox>
+        <Textbox Name="PageNumber">
+          <Value>=Globals!PageNumber</Value>
+          <Style>
+            <FontSize>10pt</FontSize>
+          </Style>
+        </Textbox>
+      </ReportItems>
+    </PageFooter>
+  </Page>
+</Report>
