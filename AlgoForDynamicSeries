@@ -50,24 +50,28 @@ class Program
 
         // Prepare the dictionary to aggregate the data based on PeriodSortOrder and PeriodName
         var aggregatedData = new Dictionary<string, Dictionary<string, decimal>>();
+        var periodDates = new Dictionary<string, (DateTime StartDate, DateTime EndDate)>();
 
         foreach (var item in data)
         {
-            // Key by PeriodSortOrder and PeriodName
-            string key = $"{item.PeriodSortOrder}_{item.PeriodName}";
+            // Composite key based on PeriodName, SeriesAggType, AttributeType, and SeriesName
+            string compositeKey = $"{item.PeriodSortOrder}_{item.PeriodName}";
 
-            if (!aggregatedData.ContainsKey(key))
+            // Initialize dictionaries if this composite key doesn't exist yet
+            if (!aggregatedData.ContainsKey(compositeKey))
             {
-                // Initialize dictionary for each series name
-                aggregatedData[key] = new Dictionary<string, decimal>();
+                aggregatedData[compositeKey] = new Dictionary<string, decimal>();
                 foreach (var seriesName in uniqueSeriesNames)
                 {
-                    aggregatedData[key][seriesName] = 0; // Initialize all series values to 0
+                    aggregatedData[compositeKey][seriesName] = 0; // Initialize all series values to 0
                 }
+
+                // Store start and end date for this combination of period
+                periodDates[compositeKey] = (item.StartDate, item.EndDate);
             }
 
-            // Set the appropriate SeriesValue for the given SeriesName
-            aggregatedData[key][item.SeriesDisplayName] = item.SeriesValue;
+            // Set the appropriate SeriesValue for the given SeriesDisplayName (unique composite key)
+            aggregatedData[compositeKey][item.SeriesDisplayName] = item.SeriesValue;
         }
 
         // Insert aggregated data into the worksheet
@@ -90,10 +94,10 @@ class Program
                 columnOffset++;
             }
 
-            // Insert StartDate and EndDate (assuming they are the same for all rows with the same PeriodName)
-            var firstRecord = data.First(d => d.PeriodName == periodName);
-            worksheet.Cells[rowIndex, columnOffset].PutValue(firstRecord.StartDate.ToShortDateString());
-            worksheet.Cells[rowIndex, columnOffset + 1].PutValue(firstRecord.EndDate.ToShortDateString());
+            // Insert StartDate and EndDate from the stored dates
+            var dates = periodDates[entry.Key];
+            worksheet.Cells[rowIndex, columnOffset].PutValue(dates.StartDate.ToShortDateString());
+            worksheet.Cells[rowIndex, columnOffset + 1].PutValue(dates.EndDate.ToShortDateString());
 
             rowIndex++;
         }
