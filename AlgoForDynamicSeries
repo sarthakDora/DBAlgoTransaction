@@ -1,0 +1,141 @@
+using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Data.SqlClient;
+using Aspose.Cells;
+using System.Linq;
+
+public class FactsheetPerformanceChartData
+{
+    public int PeriodSortOrder { get; set; }
+    public string PeriodName { get; set; }
+    public string SeriesAggType { get; set; }
+    public string AttributeType { get; set; }
+    public string SeriesName { get; set; }
+    public string SeriesDisplayName { get; set; }
+    public decimal SeriesValue { get; set; }
+    public DateTime StartDate { get; set; }
+    public DateTime EndDate { get; set; }
+}
+
+class Program
+{
+    static void Main()
+    {
+        // Assuming you have the connection string for your database
+        string connectionString = "your_connection_string";
+        List<FactsheetPerformanceChartData> data = FetchPerformanceData(connectionString);
+
+        // Extract unique SeriesNames dynamically from the data
+        var uniqueSeriesNames = data.Select(d => d.SeriesDisplayName).Distinct().ToList();
+
+        // Create the Aspose.Cells workbook and worksheet
+        Workbook workbook = new Workbook();
+        Worksheet worksheet = workbook.Worksheets[0];
+
+        // Define headers in the worksheet
+        worksheet.Cells[0, 0].PutValue("PeriodSortOrder");
+        worksheet.Cells[0, 1].PutValue("PeriodName");
+
+        // Dynamically add the SeriesDisplayName as column headers starting from index 2
+        int seriesStartColumn = 2;
+        for (int i = 0; i < uniqueSeriesNames.Count; i++)
+        {
+            worksheet.Cells[0, seriesStartColumn + i].PutValue(uniqueSeriesNames[i]);
+        }
+
+        // Add headers for StartDate and EndDate at the end
+        worksheet.Cells[0, seriesStartColumn + uniqueSeriesNames.Count].PutValue("StartDate");
+        worksheet.Cells[0, seriesStartColumn + uniqueSeriesNames.Count + 1].PutValue("EndDate");
+
+        // Prepare the dictionary to aggregate the data based on PeriodSortOrder and PeriodName
+        var aggregatedData = new Dictionary<string, Dictionary<string, decimal>>();
+
+        foreach (var item in data)
+        {
+            // Key by PeriodSortOrder and PeriodName
+            string key = $"{item.PeriodSortOrder}_{item.PeriodName}";
+
+            if (!aggregatedData.ContainsKey(key))
+            {
+                // Initialize dictionary for each series name
+                aggregatedData[key] = new Dictionary<string, decimal>();
+                foreach (var seriesName in uniqueSeriesNames)
+                {
+                    aggregatedData[key][seriesName] = 0; // Initialize all series values to 0
+                }
+            }
+
+            // Set the appropriate SeriesValue for the given SeriesName
+            aggregatedData[key][item.SeriesDisplayName] = item.SeriesValue;
+        }
+
+        // Insert aggregated data into the worksheet
+        int rowIndex = 1;
+        foreach (var entry in aggregatedData)
+        {
+            var splitKey = entry.Key.Split('_');
+            int periodSortOrder = int.Parse(splitKey[0]);
+            string periodName = splitKey[1];
+
+            // Insert PeriodSortOrder and PeriodName
+            worksheet.Cells[rowIndex, 0].PutValue(periodSortOrder);
+            worksheet.Cells[rowIndex, 1].PutValue(periodName);
+
+            // Insert series values
+            int columnOffset = seriesStartColumn;
+            foreach (var seriesName in uniqueSeriesNames)
+            {
+                worksheet.Cells[rowIndex, columnOffset].PutValue(entry.Value[seriesName]);
+                columnOffset++;
+            }
+
+            // Insert StartDate and EndDate (assuming they are the same for all rows with the same PeriodName)
+            var firstRecord = data.First(d => d.PeriodName == periodName);
+            worksheet.Cells[rowIndex, columnOffset].PutValue(firstRecord.StartDate.ToShortDateString());
+            worksheet.Cells[rowIndex, columnOffset + 1].PutValue(firstRecord.EndDate.ToShortDateString());
+
+            rowIndex++;
+        }
+
+        // Save the Excel file
+        workbook.Save("output.xlsx");
+    }
+
+    static List<FactsheetPerformanceChartData> FetchPerformanceData(string connectionString)
+    {
+        List<FactsheetPerformanceChartData> dataList = new List<FactsheetPerformanceChartData>();
+
+        using (SqlConnection connection = new SqlConnection(connectionString))
+        {
+            connection.Open();
+            using (SqlCommand command = new SqlCommand("YourStoredProcedureName", connection))
+            {
+                command.CommandType = CommandType.StoredProcedure;
+
+                using (SqlDataReader reader = command.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        var data = new FactsheetPerformanceChartData
+                        {
+                            PeriodSortOrder = Convert.ToInt32(reader["PeriodSortOrder"]),
+                            PeriodName = reader["PeriodName"].ToString(),
+                            SeriesAggType = reader["SeriesAggType"].ToString(),
+                            AttributeType = reader["AttributeType"].ToString(),
+                            SeriesName = reader["SeriesName"].ToString(),
+                            SeriesDisplayName = reader["SeriesDisplayName"].ToString(),
+                            SeriesValue = Convert.ToDecimal(reader["SeriesValue"]),
+                            StartDate = Convert.ToDateTime(reader["StartDate"]),
+                            EndDate = Convert.ToDateTime(reader["EndDate"])
+                        };
+
+                        dataList.Add(data);
+                    }
+                }
+            }
+        }
+
+        return dataList;
+    }
+}
