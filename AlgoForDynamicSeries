@@ -48,35 +48,51 @@ class Program
         worksheet.Cells[0, seriesStartColumn + uniqueSeriesNames.Count].PutValue("StartDate");
         worksheet.Cells[0, seriesStartColumn + uniqueSeriesNames.Count + 1].PutValue("EndDate");
 
-        // Prepare the dictionary to aggregate the data based on PeriodSortOrder and PeriodName
-        var aggregatedData = new Dictionary<string, Dictionary<string, decimal>>();
+        // Grouping data by the composite key (without StartDate and EndDate)
+        var groupedData = data.GroupBy(d => new
+        {
+            d.PeriodSortOrder,
+            d.PeriodName,
+            d.SeriesAggType,
+            d.AttributeType,
+            d.SeriesName
+        }).ToDictionary(g => g.Key, g => g.ToList());
+
+        // Prepare another dictionary to hold the final aggregated result
+        var finalData = new Dictionary<string, Dictionary<string, decimal>>();
         var periodDates = new Dictionary<string, (DateTime StartDate, DateTime EndDate)>();
 
-        foreach (var item in data)
+        foreach (var group in groupedData)
         {
-            // Composite key based on PeriodName, SeriesAggType, AttributeType, and SeriesName
-            string compositeKey = $"{item.PeriodSortOrder}_{item.PeriodName}";
+            // Composite key based on PeriodSortOrder and PeriodName (for aggregation)
+            string periodKey = $"{group.Key.PeriodSortOrder}_{group.Key.PeriodName}";
 
-            // Initialize dictionaries if this composite key doesn't exist yet
-            if (!aggregatedData.ContainsKey(compositeKey))
+            // Initialize dictionary if not already done
+            if (!finalData.ContainsKey(periodKey))
             {
-                aggregatedData[compositeKey] = new Dictionary<string, decimal>();
+                finalData[periodKey] = new Dictionary<string, decimal>();
+
+                // Initialize all series to 0
                 foreach (var seriesName in uniqueSeriesNames)
                 {
-                    aggregatedData[compositeKey][seriesName] = 0; // Initialize all series values to 0
+                    finalData[periodKey][seriesName] = 0;
                 }
 
-                // Store start and end date for this combination of period
-                periodDates[compositeKey] = (item.StartDate, item.EndDate);
+                // Store start and end dates for this period (from any item in the group)
+                var firstItem = group.Value.First();
+                periodDates[periodKey] = (firstItem.StartDate, firstItem.EndDate);
             }
 
-            // Set the appropriate SeriesValue for the given SeriesDisplayName (unique composite key)
-            aggregatedData[compositeKey][item.SeriesDisplayName] = item.SeriesValue;
+            // For each item in the group, map the SeriesDisplayName to the correct SeriesValue
+            foreach (var item in group.Value)
+            {
+                finalData[periodKey][item.SeriesDisplayName] = item.SeriesValue;
+            }
         }
 
-        // Insert aggregated data into the worksheet
+        // Insert final aggregated data into the worksheet
         int rowIndex = 1;
-        foreach (var entry in aggregatedData)
+        foreach (var entry in finalData)
         {
             var splitKey = entry.Key.Split('_');
             int periodSortOrder = int.Parse(splitKey[0]);
