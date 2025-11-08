@@ -1,0 +1,57 @@
+WITH CoreWithinMonth AS (
+    SELECT 
+        f.PortfolioID,
+        f.StartDate AS MonthStart,
+        f.EndDate   AS MonthEnd,
+        c.StartDate AS CoreStart,
+        c.EndDate   AS CoreEnd,
+        c.GrossROR
+    FROM FinalPerformance f
+    LEFT JOIN CorePerformance c
+        ON f.PortfolioID = c.PortfolioID
+       AND c.StartDate >= f.StartDate
+       AND c.EndDate   <= f.EndDate
+),
+CoreOrdered AS (
+    SELECT
+        cw.PortfolioID,
+        cw.MonthStart,
+        cw.MonthEnd,
+        cw.CoreStart,
+        cw.CoreEnd,
+        cw.GrossROR,
+        LAG(cw.CoreEnd) OVER (
+            PARTITION BY cw.PortfolioID, cw.MonthStart, cw.MonthEnd
+            ORDER BY cw.CoreStart
+        ) AS PrevCoreEnd
+    FROM CoreWithinMonth cw
+),
+CoreContinuity AS (
+    SELECT
+        PortfolioID,
+        MonthStart,
+        MonthEnd,
+        COUNT(*) AS TotalRows,
+        SUM(CASE WHEN GrossROR IS NULL THEN 1 ELSE 0 END) AS NullRORCount,
+        SUM(CASE 
+              WHEN PrevCoreEnd IS NOT NULL 
+               AND DATEDIFF(DAY, PrevCoreEnd, CoreStart) > 1 THEN 1
+              ELSE 0 
+            END) AS GapCount
+    FROM CoreOrdered
+    GROUP BY PortfolioID, MonthStart, MonthEnd
+)
+UPDATE f
+SET IsIncomplete =
+    CASE 
+        WHEN c.PortfolioID IS NULL
+             OR c.TotalRows = 0
+             OR c.NullRORCount > 0
+             OR c.GapCount > 0
+        THEN 1 ELSE 0
+    END
+FROM FinalPerformance f
+LEFT JOIN CoreContinuity c
+  ON f.PortfolioID = c.PortfolioID
+ AND f.StartDate = c.MonthStart
+ AND f.EndDate = c.MonthEnd;
